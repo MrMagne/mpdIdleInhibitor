@@ -1,0 +1,27 @@
+[Unit]
+Description=mpdIdleInhibitor inhibits gnome blanking the screen when idle if mpd is playing
+After=mpd.service
+Requires=mpd.service
+
+[Service]
+Type=simple
+ExecStart=%h/.config/mpdIdleInhibitor.py
+
+# disallow writing to /usr, /bin, /sbin, ...
+ProtectSystem=yes
+
+# more paranoid security settings
+NoNewPrivileges=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+# AF_NETLINK is required by libsmbclient, or it will exit() .. *sigh*
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK
+RestrictNamespaces=yes
+
+# Note that "ProtectKernelModules=yes" is missing in the user unit
+# because systemd 232 is unable to reduce its own capabilities
+# ("Failed at step CAPABILITIES spawning /usr/bin/mpd: Operation not
+# permitted")
+
+[Install]
+WantedBy=default.target
