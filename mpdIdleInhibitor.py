@@ -10,7 +10,7 @@ unregister = sessionManager.get_dbus_method('UnregisterClient', 'org.gnome.Sessi
 inhibit = sessionManager.get_dbus_method('Inhibit', 'org.gnome.SessionManager')
 uninhibit = sessionManager.get_dbus_method('Uninhibit', 'org.gnome.SessionManager')
 
-cookie = None;
+cookie = None
 appId = register('mpdIdleInhibitor', 'mpdIdleInhibitor.0')
 
 mpd = MPDClient()               # create client object
@@ -22,11 +22,12 @@ try:
             if (status == 'play'):
                 if (cookie is None):
                     cookie=inhibit(appId, 0, 'mpd is playing', 8); #8 =>flag for idle
-                print('playing')
+                #print('playing')
             else:
                 if (not cookie is None):
                     uninhibit(cookie)
-                print('not playing: '+status)
+                    cookie=None
+                #print('not playing: '+status)
 except:
     print('mpdIdleInhibitor shutting down')
 finally:
