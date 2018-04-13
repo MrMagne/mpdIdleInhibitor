@@ -5,6 +5,7 @@ from gi.repository import GObject
 from dbus.mainloop.glib import DBusGMainLoop
 from functools import partial, reduce
 import argparse
+import time
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-v', dest='verbose', action='store_true')
@@ -15,11 +16,23 @@ DBusGMainLoop(set_as_default=True)
 loop = GObject.MainLoop()
 
 session_bus = dbus.SessionBus()
-sessionManager = session_bus.get_object('org.gnome.SessionManager', '/org/gnome/SessionManager')
-register = sessionManager.get_dbus_method('RegisterClient', 'org.gnome.SessionManager')
-unregister = sessionManager.get_dbus_method('UnregisterClient', 'org.gnome.SessionManager')
-inhibit = sessionManager.get_dbus_method('Inhibit', 'org.gnome.SessionManager')
-uninhibit = sessionManager.get_dbus_method('Uninhibit', 'org.gnome.SessionManager')
+MAX_RETRIES=10
+for _ in range(MAX_RETRIES):
+    try:
+        sessionManager = session_bus.get_object('org.gnome.SessionManager', '/org/gnome/SessionManager')
+        register = sessionManager.get_dbus_method('RegisterClient', 'org.gnome.SessionManager')
+        unregister = sessionManager.get_dbus_method('UnregisterClient', 'org.gnome.SessionManager')
+        inhibit = sessionManager.get_dbus_method('Inhibit', 'org.gnome.SessionManager')
+        uninhibit = sessionManager.get_dbus_method('Uninhibit', 'org.gnome.SessionManager')
+    except SomeTransientError:
+        print("unable to get gnome-session's dbus object, retrying soon")
+        time.sleep(5)
+        continue
+    else:
+        break
+else:
+    raise Exception("Can't get gnome-session's dbus object after %i tries", MAX_RETRIES)
+
 cookie = None
 states = {}
 watches = {}
